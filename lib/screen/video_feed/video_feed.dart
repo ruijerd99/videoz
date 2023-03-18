@@ -44,20 +44,25 @@ class _VideoFeedState extends State<VideoFeed> {
       _previousIndex = _currentIndex;
       _currentIndex = _pageController.page!.round();
 
-      // print("=== reset video ${widget.videos[_previousIndex].id}");
+      print("=== reset video ${widget.videos[_previousIndex].id}");
       _controllers[widget.videos[_previousIndex].id]?.pause();
       _controllers[widget.videos[_previousIndex].id]?.seekTo(Duration.zero);
 
-      // print("=== play video ${widget.videos[_currentIndex].id}");
+      print("=== play video ${widget.videos[_currentIndex].id}");
       _controllers[widget.videos[_currentIndex].id]?.play();
 
       // dispose all controllers except n, n-1, n+1
-      print("=== dispose video ${widget.videos[_currentIndex - 2].id}");
-      print("=== dispose video ${widget.videos[_currentIndex + 2].id}");
-      _controllers[widget.videos[_currentIndex - 2].id]?.dispose();
-      _controllers[widget.videos[_currentIndex + 2].id]?.dispose();
-      _controllers.remove(widget.videos[_currentIndex - 2].id);
-      _controllers.remove(widget.videos[_currentIndex + 2].id);
+      if (_currentIndex - 2 >= 0) {
+        _controllers[widget.videos[_currentIndex - 2].id]?.dispose();
+        _controllers.remove(widget.videos[_currentIndex - 2].id);
+        print("=== dispose video ${widget.videos[_currentIndex - 2].id}");
+      }
+
+      if (_currentIndex + 2 < widget.videos.length) {
+        _controllers[widget.videos[_currentIndex + 2].id]?.dispose();
+        _controllers.remove(widget.videos[_currentIndex + 2].id);
+        print("=== dispose video ${widget.videos[_currentIndex + 2].id}");
+      }
     });
   }
 
@@ -77,6 +82,7 @@ class _VideoFeedState extends State<VideoFeed> {
         controller: _pageController,
         itemCount: widget.videos.length,
         scrollDirection: Axis.vertical,
+        physics: const CustomPageViewScrollPhysics(),
         itemBuilder: (context, index) {
           final video = widget.videos[index];
           // check if controller is not created yet
@@ -96,4 +102,21 @@ class _VideoFeedState extends State<VideoFeed> {
       ),
     );
   }
+}
+
+class CustomPageViewScrollPhysics extends ScrollPhysics {
+  const CustomPageViewScrollPhysics({ScrollPhysics? parent})
+      : super(parent: parent);
+
+  @override
+  CustomPageViewScrollPhysics applyTo(ScrollPhysics? ancestor) {
+    return CustomPageViewScrollPhysics(parent: buildParent(ancestor)!);
+  }
+
+  @override
+  SpringDescription get spring => const SpringDescription(
+        mass: 80,
+        stiffness: 100,
+        damping: 0.8,
+      );
 }

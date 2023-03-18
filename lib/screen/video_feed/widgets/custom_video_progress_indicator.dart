@@ -24,9 +24,9 @@ class _MyProgressIndicatorState extends State<MyProgressIndicator> {
 
   VideoPlayerController get controller => widget.controller;
 
-  final _bufferedColor = Colors.white24;
-  final _playedColor = Colors.white54;
-  final _backgroundColor = Colors.white12;
+  final _bufferedColor = Colors.white60;
+  final _playedColor = Colors.white;
+  final _backgroundColor = Colors.black38;
   final _minHeight = 1.5;
 
   @override
@@ -59,6 +59,7 @@ class _MyProgressIndicatorState extends State<MyProgressIndicator> {
       progressIndicator = Stack(
         fit: StackFit.passthrough,
         children: <Widget>[
+
           LinearProgressIndicator(
             value: maxBuffering / duration,
             valueColor: AlwaysStoppedAnimation<Color>(_bufferedColor),

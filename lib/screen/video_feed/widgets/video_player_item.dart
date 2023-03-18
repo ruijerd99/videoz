@@ -28,7 +28,6 @@ class _VideoPlayerItemState extends State<VideoPlayerItem>
   @override
   void initState() {
     super.initState();
-
     _iconAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
