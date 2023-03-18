@@ -28,31 +28,34 @@ class GridVideoItem extends StatelessWidget {
         children: [
           AspectRatio(
             aspectRatio: 1,
-            child: Image.file(
-              File(video.getThumbnailPath),
-              frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
-                return frame == null
-                    ? Shimmer.fromColors(
-                        direction: ShimmerDirection.ltr,
-                        baseColor: Colors.white24,
-                        highlightColor: Colors.white30,
-                        child: Container(
-                          color: Colors.white24,
-                        ),
-                      )
-                    : child;
-              },
-              errorBuilder: (context, error, stackTrace) {
-                return Shimmer.fromColors(
-                  direction: ShimmerDirection.ltr,
-                  baseColor: Colors.white24,
-                  highlightColor: Colors.white30,
-                  child: Container(
-                    color: Colors.white24,
-                  ),
-                );
-              },
-              fit: BoxFit.cover,
+            child: Hero(
+              tag: video.id,
+              child: Image.file(
+                File(video.getThumbnailPath),
+                frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+                  return frame == null
+                      ? Shimmer.fromColors(
+                          direction: ShimmerDirection.ltr,
+                          baseColor: Colors.white24,
+                          highlightColor: Colors.white30,
+                          child: Container(
+                            color: Colors.white24,
+                          ),
+                        )
+                      : child;
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Shimmer.fromColors(
+                    direction: ShimmerDirection.ltr,
+                    baseColor: Colors.white24,
+                    highlightColor: Colors.white30,
+                    child: Container(
+                      color: Colors.white24,
+                    ),
+                  );
+                },
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           if (selected)

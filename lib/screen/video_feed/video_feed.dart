@@ -44,6 +44,11 @@ class _VideoFeedState extends State<VideoFeed> {
       _previousIndex = _currentIndex;
       _currentIndex = _pageController.page!.round();
 
+      // print("=== reset video ${widget.videos[_previousIndex].id}");
+      _controllers[widget.videos[_previousIndex].id]?.pause();
+      _controllers[widget.videos[_previousIndex].id]?.seekTo(Duration.zero);
+
+      // print("=== play video ${widget.videos[_currentIndex].id}");
       _controllers[widget.videos[_currentIndex].id]?.play();
     });
   }
@@ -64,9 +69,6 @@ class _VideoFeedState extends State<VideoFeed> {
         controller: _pageController,
         itemCount: widget.videos.length,
         scrollDirection: Axis.vertical,
-        onPageChanged: (value) {
-          print('onPageChanged: $value');
-        },
         itemBuilder: (context, index) {
           final video = widget.videos[index];
           // check if controller is not created yet
@@ -74,6 +76,11 @@ class _VideoFeedState extends State<VideoFeed> {
             _controllers[video.id] = VideoPlayerController.file(
               File(video.getPath),
             );
+          }
+
+          if (_currentIndex == index) {
+            // play the first video
+            _controllers[video.id]!.play();
           }
 
           return VideoPlayerItem(

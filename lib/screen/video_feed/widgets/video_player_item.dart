@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../../data/model/video/video.dart';
+import 'custom_video_progress_indicator.dart';
 
 class VideoPlayerItem extends StatefulWidget {
   final Video video;
@@ -19,57 +20,112 @@ class VideoPlayerItem extends StatefulWidget {
   State<VideoPlayerItem> createState() => _VideoPlayerItemState();
 }
 
-class _VideoPlayerItemState extends State<VideoPlayerItem> {
-  late final VideoPlayerController _controller;
+class _VideoPlayerItemState extends State<VideoPlayerItem>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _iconAnimationController;
+  late Animation<double> _iconAnimation;
 
   @override
   void initState() {
     super.initState();
+
+    _iconAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _iconAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      _iconAnimationController,
+    );
   }
 
   @override
   void dispose() {
-    // reset video player
-    _controller.pause();
-    _controller.seekTo(Duration.zero);
+    _iconAnimationController.dispose();
     super.dispose();
   }
 
   Future<void> _initializeVideoPlayer() async {
-    _controller = widget.controller;
-    if (_controller.value.isInitialized) {
+    if (widget.controller.value.isInitialized) {
       return;
     }
-    print("=== initialize video player");
-    await _controller.initialize();
-    await _controller.setLooping(true);
-    await _controller.play();
+    // print("=== initialize video ${video.id}");
+    await widget.controller.initialize();
+    await widget.controller.setLooping(true);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: GestureDetector(
-        onTap: () {
-          if (_controller.value.isPlaying) {
-            _controller.pause();
-          } else {
-            _controller.play();
-          }
-        },
-        child: Center(
-          child: FutureBuilder(
-            future: _initializeVideoPlayer(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Image.file(File(widget.video.getThumbnailPath));
-              }
-
-              return AspectRatio(
-                aspectRatio: _controller.value.aspectRatio,
-                child: VideoPlayer(_controller),
-              );
-            },
+    return GestureDetector(
+      onTap: () {
+        if (widget.controller.value.isPlaying) {
+          widget.controller.pause();
+          _iconAnimationController.forward();
+        } else {
+          widget.controller.play();
+          _iconAnimationController.reverse();
+        }
+      },
+      onHorizontalDragEnd: (details) => Navigator.of(context).pop(),
+      child: Scaffold(
+        body: GestureDetector(
+          onTap: () {
+            if (widget.controller.value.isPlaying) {
+              widget.controller.pause();
+              _iconAnimationController.forward();
+            } else {
+              widget.controller.play();
+              _iconAnimationController.reverse();
+            }
+          },
+          onHorizontalDragEnd: (details) {
+            // catch only left to right and distance long enough
+            // print("=== ${details.primaryVelocity}");
+            if (details.primaryVelocity! > 300) {
+              Navigator.of(context).pop();
+            }
+          },
+          child: Hero(
+            tag: widget.video.id,
+            child: Center(
+              child: FutureBuilder(
+                future: _initializeVideoPlayer(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Image.file(File(widget.video.getThumbnailPath));
+                  }
+          
+                  return Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AspectRatio(
+                            aspectRatio: widget.controller.value.aspectRatio,
+                            child: VideoPlayer(widget.controller),
+                          ),
+                          FadeTransition(
+                            opacity: _iconAnimation,
+                            child: MyProgressIndicator(
+                              widget.controller,
+                            ),
+                          ),
+                        ],
+                      ),
+                      FadeTransition(
+                        opacity: _iconAnimation,
+                        child: AnimatedIcon(
+                          icon: AnimatedIcons.pause_play,
+                          progress: _iconAnimation,
+                          size: 100,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
           ),
         ),
       ),
