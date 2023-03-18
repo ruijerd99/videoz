@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:videoz/screen/video_feed/widgets/video_player_item.dart';
@@ -21,8 +23,7 @@ class VideoFeed extends StatefulWidget {
 class _VideoFeedState extends State<VideoFeed> {
   late final PageController _pageController;
 
-  VideoPlayerController? _nextVideoController;
-  VideoPlayerController? _previousVideoController;
+  final Map<int, VideoPlayerController> _controllers = {};
 
   var _currentIndex = 0;
   var _previousIndex = 0;
@@ -30,9 +31,9 @@ class _VideoFeedState extends State<VideoFeed> {
   @override
   void initState() {
     super.initState();
-
-    _pageController = PageController(initialPage: widget.initialIndex);
     _currentIndex = widget.initialIndex;
+
+    _pageController = PageController(initialPage: _currentIndex);
 
     _pageController.addListener(() {
       if (_currentIndex - 1 < _pageController.page! &&
@@ -40,22 +41,19 @@ class _VideoFeedState extends State<VideoFeed> {
         return;
       }
 
-      // complete new page
       _previousIndex = _currentIndex;
-      _currentIndex = _pageController.page!.toInt();
-      if (_currentIndex < _previousIndex) {
-        _previousVideoController?.play();
-        print('play previous: $_currentIndex');
-      } else if (_currentIndex > _previousIndex) {
-        _nextVideoController?.play();
-        print('play next: $_currentIndex');
-      }
+      _currentIndex = _pageController.page!.round();
+
+      _controllers[widget.videos[_currentIndex].id]?.play();
     });
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    _controllers.forEach((key, value) {
+      value.dispose();
+    });
     super.dispose();
   }
 
@@ -71,23 +69,16 @@ class _VideoFeedState extends State<VideoFeed> {
         },
         itemBuilder: (context, index) {
           final video = widget.videos[index];
+          // check if controller is not created yet
+          if (_controllers[video.id] == null) {
+            _controllers[video.id] = VideoPlayerController.file(
+              File(video.getPath),
+            );
+          }
 
           return VideoPlayerItem(
             video: video,
-            onControllerInitialized: (controller) {
-              if (index < _currentIndex) {
-                _previousVideoController = controller;
-                print('previous: $index');
-              } else if (index > _currentIndex) {
-                _nextVideoController = controller;
-                print('next: $index');
-              }
-
-              if (index == _currentIndex) {
-                controller.play();
-              }
-            },
-            loop: true,
+            controller: _controllers[video.id]!,
           );
         },
       ),
