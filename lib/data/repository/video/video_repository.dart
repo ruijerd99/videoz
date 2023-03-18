@@ -5,9 +5,10 @@ import '../../model/video/video.dart';
 
 abstract class VideoRepository {
   Future<List<Video>> getAllVideos();
-  Future<void> saveVideo(Video video);
-  Future<void> deleteVideo(Video video);
-  Future<void> deleteVideos(List<Video> videos);
+  Future<int> saveVideo(Video video);
+  Future<bool> deleteVideo(Video video);
+  Future<int> deleteVideos(List<Video> videos);
+  Stream<void> watchVideos();
 }
 
 class VideoRepositoryImpl implements VideoRepository {
@@ -19,25 +20,34 @@ class VideoRepositoryImpl implements VideoRepository {
 
   @override
   Future<List<Video>> getAllVideos() async {
-    return _videoLocalDataSource.getAllVideos();
+    return await _videoLocalDataSource.getAllVideos();
   }
 
   @override
-  Future<void> saveVideo(Video video) async {
-    await _videoLocalDataSource.saveVideo(video);
+  Future<int> saveVideo(Video video) async {
+    return await _videoLocalDataSource.saveVideo(video);
   }
 
   @override
-  Future<void> deleteVideo(Video video) async {
-    await _videoLocalDataSource.deleteVideoById(video.id);
-    await FileHelper.deleteFile(video.path);
-    await FileHelper.deleteFile(video.thumbnailPath);
+  Future<bool> deleteVideo(Video video) async {
+    await FileHelper.deleteFile(video.getPath);
+    await FileHelper.deleteFile(video.getThumbnailPath);
+
+    return await _videoLocalDataSource.deleteVideoById(video.id);
   }
 
   @override
-  Future<void> deleteVideos(List<Video> videos) async {
+  Future<int> deleteVideos(List<Video> videos) async {
     for (final video in videos) {
-      await deleteVideo(video);
+      await FileHelper.deleteFile(video.getPath);
+      await FileHelper.deleteFile(video.getThumbnailPath);
     }
+
+    return await _videoLocalDataSource.deleteVideos(videos.map((e) => e.id).toList());
+  }
+
+  @override
+  Stream<void> watchVideos() {
+    return _videoLocalDataSource.watchVideos();
   }
 }

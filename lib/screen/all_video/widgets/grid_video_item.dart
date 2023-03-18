@@ -29,7 +29,7 @@ class GridVideoItem extends StatelessWidget {
           AspectRatio(
             aspectRatio: 1,
             child: Image.file(
-              File(video.thumbnail),
+              File(video.getThumbnailPath),
               frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
                 return frame == null
                     ? Shimmer.fromColors(

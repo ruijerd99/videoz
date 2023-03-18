@@ -4,9 +4,10 @@ import '../../model/video/video.dart';
 
 abstract class VideoLocalDataSource {
   Future<List<Video>> getAllVideos();
-  Future<void> saveVideo(Video video);
-  Future<void> deleteVideoById(int id);
-  Future<void> deleteVideos(List<int> ids);
+  Future<int> saveVideo(Video video);
+  Future<bool> deleteVideoById(int id);
+  Future<int> deleteVideos(List<int> ids);
+  Stream<void> watchVideos();
 }
 
 class VideoLocalDataSourceImpl implements VideoLocalDataSource {
@@ -21,23 +22,28 @@ class VideoLocalDataSourceImpl implements VideoLocalDataSource {
   }
 
   @override
-  Future<void> saveVideo(Video video) async {
-    await _isar.writeTxn(() async {
-      await _isar.videos.put(video);
+  Future<int> saveVideo(Video video) async {
+    return await _isar.writeTxn(() async {
+      return await _isar.videos.put(video);
     });
   }
 
   @override
-  Future<void> deleteVideoById(int id) async {
-    await _isar.writeTxn(() async {
-      await _isar.videos.delete(id);
+  Future<bool> deleteVideoById(int id) async {
+    return await _isar.writeTxn(() async {
+      return await _isar.videos.delete(id);
     });
   }
 
   @override
-  Future<void> deleteVideos(List<int> ids) async {
-    await _isar.writeTxn(() async {
-      await _isar.videos.deleteAll(ids);
+  Future<int> deleteVideos(List<int> ids) async {
+    return await _isar.writeTxn(() async {
+      return await _isar.videos.deleteAll(ids);
     });
+  }
+
+  @override
+  Stream<void> watchVideos() {
+    return _isar.videos.watchLazy();
   }
 }

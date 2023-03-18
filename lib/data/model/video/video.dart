@@ -10,8 +10,12 @@ class Video {
   final String path;
   final int views;
 
-  get thumbnail => "$documentDir/$thumbnailPath";
-  get video => "$documentDir/$path";
+  @ignore
+  get getThumbnailPath => "$documentDir/$thumbnailPath";
+
+  @ignore
+  get getPath => "$documentDir/$path";
+
 
   Video({
     required this.path,
