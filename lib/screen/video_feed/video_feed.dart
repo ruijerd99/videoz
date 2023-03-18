@@ -50,6 +50,14 @@ class _VideoFeedState extends State<VideoFeed> {
 
       // print("=== play video ${widget.videos[_currentIndex].id}");
       _controllers[widget.videos[_currentIndex].id]?.play();
+
+      // dispose all controllers except n, n-1, n+1
+      print("=== dispose video ${widget.videos[_currentIndex - 2].id}");
+      print("=== dispose video ${widget.videos[_currentIndex + 2].id}");
+      _controllers[widget.videos[_currentIndex - 2].id]?.dispose();
+      _controllers[widget.videos[_currentIndex + 2].id]?.dispose();
+      _controllers.remove(widget.videos[_currentIndex - 2].id);
+      _controllers.remove(widget.videos[_currentIndex + 2].id);
     });
   }
 
@@ -72,20 +80,17 @@ class _VideoFeedState extends State<VideoFeed> {
         itemBuilder: (context, index) {
           final video = widget.videos[index];
           // check if controller is not created yet
-          if (_controllers[video.id] == null) {
-            _controllers[video.id] = VideoPlayerController.file(
-              File(video.getPath),
-            );
-          }
+          final controller = _controllers.putIfAbsent(video.id, () {
+            return VideoPlayerController.file(File(video.getPath));
+          });
 
           if (_currentIndex == index) {
-            // play the first video
-            _controllers[video.id]!.play();
+            controller.play();
           }
 
           return VideoPlayerItem(
             video: video,
-            controller: _controllers[video.id]!,
+            controller: controller,
           );
         },
       ),

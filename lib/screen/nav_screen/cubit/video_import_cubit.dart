@@ -49,7 +49,8 @@ class VideoImportCubit extends Cubit<VideoImportState> {
       }
 
       final fileExtension = FileHelper.getFileExtension(videoFile);
-      final fileName = FileHelper.getFileName(file: videoFile, fileExtension: fileExtension);
+      final fileName =
+          FileHelper.getFileName(file: videoFile, fileExtension: fileExtension);
       final newPath = '${dir.path}/$fileName.$fileExtension';
 
       final file = File(newPath);
@@ -87,6 +88,15 @@ class VideoImportCubit extends Cubit<VideoImportState> {
         getIt<VideoRepository>().saveVideo(video);
 
         return _VideoProcessingResult(success: true);
+      } on FileSystemException catch (err) {
+        if (err.osError?.errorCode == 28) {
+          return _OutOfMenory();
+        }
+
+        return _VideoProcessingResult(
+          success: false,
+          errorMessage: 'Failed to process video: $newPath, error: $err',
+        );
       } catch (e) {
         return _VideoProcessingResult(
           success: false,
@@ -97,18 +107,31 @@ class VideoImportCubit extends Cubit<VideoImportState> {
 
     hideLoading();
 
-    final successCount = processingResults.where((result) => result.success).length;
-    final errorCount = assets.length - successCount;
+    var successCount = 0;
+    var errorCount = 0;
+    var outOfMemory = false;
+
+    for (final result in processingResults) {
+      if (result.success) {
+        successCount++;
+      } else {
+        errorCount++;
+      }
+
+      if (result is _OutOfMenory) {
+        outOfMemory = true;
+      }
+    }
 
     if (errorCount > 0) {
       BotToast.showText(
-        text: 'Imported $successCount videos.\n$errorCount videos failed to import.',
+        text: 'Imported $successCount videos, failed to import $errorCount videos.',
       );
 
-      for (final result in processingResults) {
-        if (!result.success) {
-          log('Error: ${result.errorMessage}');
-        }
+      if (outOfMemory) {
+        BotToast.showText(
+          text: 'Out of storage space, please free up some space and try again.',
+        );
       }
     } else {
       BotToast.showText(text: 'Imported $successCount videos.');
@@ -121,4 +144,8 @@ class _VideoProcessingResult {
   final String? errorMessage;
 
   _VideoProcessingResult({required this.success, this.errorMessage});
+}
+
+class _OutOfMenory extends _VideoProcessingResult {
+  _OutOfMenory() : super(success: false, errorMessage: 'Out of storage space');
 }

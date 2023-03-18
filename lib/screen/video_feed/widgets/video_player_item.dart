@@ -50,7 +50,9 @@ class _VideoPlayerItemState extends State<VideoPlayerItem>
       return;
     }
     // print("=== initialize video ${video.id}");
-    await widget.controller.initialize();
+    await widget.controller
+        .initialize()
+        .then((value) => print("=== initialized video ${widget.video.id}"));
     await widget.controller.setLooping(true);
   }
 
@@ -85,46 +87,47 @@ class _VideoPlayerItemState extends State<VideoPlayerItem>
               Navigator.of(context).pop();
             }
           },
-          child: Hero(
-            tag: widget.video.id,
-            child: Center(
-              child: FutureBuilder(
-                future: _initializeVideoPlayer(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Image.file(File(widget.video.getThumbnailPath));
-                  }
-          
-                  return Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AspectRatio(
-                            aspectRatio: widget.controller.value.aspectRatio,
-                            child: VideoPlayer(widget.controller),
-                          ),
-                          FadeTransition(
-                            opacity: _iconAnimation,
-                            child: MyProgressIndicator(
-                              widget.controller,
-                            ),
-                          ),
-                        ],
-                      ),
-                      FadeTransition(
-                        opacity: _iconAnimation,
-                        child: AnimatedIcon(
-                          icon: AnimatedIcons.pause_play,
-                          progress: _iconAnimation,
-                          size: 100,
+          child: Center(
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Hero(
+                  tag: widget.video.id,
+                  child: Image.file(File(widget.video.getThumbnailPath)),
+                ),
+                FutureBuilder(
+                  future: _initializeVideoPlayer(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox.shrink();
+                    }
+
+                    return Stack(
+                      alignment: Alignment.bottomCenter,
+                      children: [
+                        AspectRatio(
+                          aspectRatio: widget.controller.value.aspectRatio,
+                          child: VideoPlayer(widget.controller),
                         ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+                        FadeTransition(
+                          opacity: _iconAnimation,
+                          child: MyProgressIndicator(
+                            widget.controller,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+                FadeTransition(
+                  opacity: _iconAnimation,
+                  child: AnimatedIcon(
+                    icon: AnimatedIcons.pause_play,
+                    progress: _iconAnimation,
+                    size: 100,
+                  ),
+                ),
+              ],
             ),
           ),
         ),

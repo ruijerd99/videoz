@@ -70,6 +70,28 @@ class _AllVideoScreenState extends State<AllVideoScreen> {
             },
           ),
         ],
+        leading: BlocBuilder<AllVideoBloc, VideoState>(
+          bloc: _videoBloc,
+          buildWhen: (previous, current) {
+            if (current is VideoLoaded && previous is VideoLoaded) {
+              return previous.selectionMode() != current.selectionMode();
+            }
+            return false;
+          },
+          builder: (context, state) {
+            if (state is VideoLoaded) {
+              if (state.selectionMode()) {
+                return IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    _videoBloc.add(ExitSelectionMode());
+                  },
+                );
+              }
+            }
+            return const SizedBox.shrink();
+          },
+        ),
       ),
       body: BlocBuilder<AllVideoBloc, VideoState>(
         bloc: _videoBloc,
@@ -128,11 +150,16 @@ class _AllVideoScreenState extends State<AllVideoScreen> {
               );
             } else {
               Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => VideoFeed(
-                    videos: videos,
-                    initialIndex: index,
-                  ),
+                PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: VideoFeed(
+                        videos: videos,
+                        initialIndex: index,
+                      ),
+                    );
+                  },
                 ),
               );
             }

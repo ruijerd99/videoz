@@ -18,10 +18,18 @@ class AllVideoBloc extends Bloc<VideoEvent, VideoState> {
     on<SelectVideo>(_onSelectVideo);
     on<DeselectVideo>(_onDeselectVideo);
     on<DeleteVideos>(_onDeleteVideos);
+    on<ExitSelectionMode>(_onExitSelectionMode);
 
-    _videoSubscription = getIt<VideoRepository>().watchVideos().listen((videos) {
+    _videoSubscription =
+        getIt<VideoRepository>().watchVideos().listen((videos) {
       add(LoadVideos());
     });
+  }
+
+  @override
+  Future<void> close() {
+    _videoSubscription?.cancel();
+    return super.close();
   }
 
   Future<void> _onLoadVideos(LoadVideos event, Emitter<VideoState> emit) async {
@@ -42,13 +50,15 @@ class AllVideoBloc extends Bloc<VideoEvent, VideoState> {
   void _onDeselectVideo(DeselectVideo event, Emitter<VideoState> emit) {
     final currentState = state as VideoLoaded;
     if (currentState.isSelected(event.video)) {
-      final selectedVideos = List.of(currentState.selectedVideos)..remove(event.video);
+      final selectedVideos = List.of(currentState.selectedVideos)
+        ..remove(event.video);
 
       emit(VideoLoaded(currentState.videos, selectedVideos));
     }
   }
 
-  Future<void> _onDeleteVideos(DeleteVideos event, Emitter<VideoState> emit) async {
+  Future<void> _onDeleteVideos(
+      DeleteVideos event, Emitter<VideoState> emit) async {
     showLoading();
     var deletes = await getIt<VideoRepository>().deleteVideos(event.videos);
     hideLoading();
@@ -64,9 +74,9 @@ class AllVideoBloc extends Bloc<VideoEvent, VideoState> {
     emit(VideoLoaded(videos));
   }
 
-  @override
-  Future<void> close() {
-    _videoSubscription?.cancel();
-    return super.close();
+  Future<void> _onExitSelectionMode(
+      ExitSelectionMode event, Emitter<VideoState> emit) async {
+    final currentState = state as VideoLoaded;
+    emit(VideoLoaded(currentState.videos));
   }
 }

@@ -19,7 +19,7 @@ class VideoLoaded extends VideoState {
   ]);
 
   @override
-  List<Object> get props => [videos, selectedVideos, selectionMode];
+  List<Object> get props => [videos, selectedVideos];
 
   bool isSelected(Video video) => selectedVideos.contains(video);
   bool selectionMode() => selectedVideos.isNotEmpty;

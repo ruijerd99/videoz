@@ -35,3 +35,5 @@ class DeleteVideos extends VideoEvent {
   @override
   List<Object> get props => [videos];
 }
+
+class ExitSelectionMode extends VideoEvent {}
