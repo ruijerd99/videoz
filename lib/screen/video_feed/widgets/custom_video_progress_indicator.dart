@@ -26,7 +26,7 @@ class _MyProgressIndicatorState extends State<MyProgressIndicator> {
 
   final _bufferedColor = Colors.white60;
   final _playedColor = Colors.white;
-  final _backgroundColor = Colors.black38;
+  final _backgroundColor = Colors.white10;
   final _minHeight = 1.5;
 
   @override

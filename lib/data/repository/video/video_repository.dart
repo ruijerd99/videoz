@@ -9,6 +9,7 @@ abstract class VideoRepository {
   Future<bool> deleteVideo(Video video);
   Future<int> deleteVideos(List<Video> videos);
   Stream<void> watchVideos();
+  Stream<List<Video>> watchAllVideos();
 }
 
 class VideoRepositoryImpl implements VideoRepository {
@@ -49,5 +50,10 @@ class VideoRepositoryImpl implements VideoRepository {
   @override
   Stream<void> watchVideos() {
     return _videoLocalDataSource.watchVideos();
+  }
+  
+  @override
+  Stream<List<Video>> watchAllVideos() {
+    return _videoLocalDataSource.watchAllVideos();
   }
 }

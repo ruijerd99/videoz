@@ -8,6 +8,7 @@ abstract class VideoLocalDataSource {
   Future<bool> deleteVideoById(int id);
   Future<int> deleteVideos(List<int> ids);
   Stream<void> watchVideos();
+  Stream<List<Video>> watchAllVideos();
 }
 
 class VideoLocalDataSourceImpl implements VideoLocalDataSource {
@@ -45,5 +46,10 @@ class VideoLocalDataSourceImpl implements VideoLocalDataSource {
   @override
   Stream<void> watchVideos() {
     return _isar.videos.watchLazy();
+  }
+  
+  @override
+  Stream<List<Video>> watchAllVideos() {
+    return _isar.videos.where().watch();
   }
 }

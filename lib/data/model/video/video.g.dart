@@ -17,20 +17,30 @@ const VideoSchema = CollectionSchema(
   name: r'Video',
   id: 113594071489080673,
   properties: {
-    r'path': PropertySchema(
+    r'height': PropertySchema(
       id: 0,
+      name: r'height',
+      type: IsarType.double,
+    ),
+    r'path': PropertySchema(
+      id: 1,
       name: r'path',
       type: IsarType.string,
     ),
     r'thumbnailPath': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'thumbnailPath',
       type: IsarType.string,
     ),
     r'views': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'views',
       type: IsarType.long,
+    ),
+    r'width': PropertySchema(
+      id: 4,
+      name: r'width',
+      type: IsarType.double,
     )
   },
   estimateSize: _videoEstimateSize,
@@ -64,9 +74,11 @@ void _videoSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.path);
-  writer.writeString(offsets[1], object.thumbnailPath);
-  writer.writeLong(offsets[2], object.views);
+  writer.writeDouble(offsets[0], object.height);
+  writer.writeString(offsets[1], object.path);
+  writer.writeString(offsets[2], object.thumbnailPath);
+  writer.writeLong(offsets[3], object.views);
+  writer.writeDouble(offsets[4], object.width);
 }
 
 Video _videoDeserialize(
@@ -76,9 +88,11 @@ Video _videoDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Video(
-    path: reader.readString(offsets[0]),
-    thumbnailPath: reader.readString(offsets[1]),
-    views: reader.readLongOrNull(offsets[2]) ?? 0,
+    height: reader.readDouble(offsets[0]),
+    path: reader.readString(offsets[1]),
+    thumbnailPath: reader.readString(offsets[2]),
+    views: reader.readLongOrNull(offsets[3]) ?? 0,
+    width: reader.readDouble(offsets[4]),
   );
   object.id = id;
   return object;
@@ -92,11 +106,15 @@ P _videoDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readString(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
+      return (reader.readString(offset)) as P;
+    case 3:
       return (reader.readLongOrNull(offset) ?? 0) as P;
+    case 4:
+      return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -190,6 +208,68 @@ extension VideoQueryWhere on QueryBuilder<Video, Video, QWhereClause> {
 }
 
 extension VideoQueryFilter on QueryBuilder<Video, Video, QFilterCondition> {
+  QueryBuilder<Video, Video, QAfterFilterCondition> heightEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'height',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Video, Video, QAfterFilterCondition> heightGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'height',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Video, Video, QAfterFilterCondition> heightLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'height',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Video, Video, QAfterFilterCondition> heightBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'height',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<Video, Video, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -551,6 +631,68 @@ extension VideoQueryFilter on QueryBuilder<Video, Video, QFilterCondition> {
       ));
     });
   }
+
+  QueryBuilder<Video, Video, QAfterFilterCondition> widthEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'width',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Video, Video, QAfterFilterCondition> widthGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'width',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Video, Video, QAfterFilterCondition> widthLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'width',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Video, Video, QAfterFilterCondition> widthBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'width',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
 }
 
 extension VideoQueryObject on QueryBuilder<Video, Video, QFilterCondition> {}
@@ -558,6 +700,18 @@ extension VideoQueryObject on QueryBuilder<Video, Video, QFilterCondition> {}
 extension VideoQueryLinks on QueryBuilder<Video, Video, QFilterCondition> {}
 
 extension VideoQuerySortBy on QueryBuilder<Video, Video, QSortBy> {
+  QueryBuilder<Video, Video, QAfterSortBy> sortByHeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'height', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Video, Video, QAfterSortBy> sortByHeightDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'height', Sort.desc);
+    });
+  }
+
   QueryBuilder<Video, Video, QAfterSortBy> sortByPath() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'path', Sort.asc);
@@ -593,9 +747,33 @@ extension VideoQuerySortBy on QueryBuilder<Video, Video, QSortBy> {
       return query.addSortBy(r'views', Sort.desc);
     });
   }
+
+  QueryBuilder<Video, Video, QAfterSortBy> sortByWidth() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'width', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Video, Video, QAfterSortBy> sortByWidthDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'width', Sort.desc);
+    });
+  }
 }
 
 extension VideoQuerySortThenBy on QueryBuilder<Video, Video, QSortThenBy> {
+  QueryBuilder<Video, Video, QAfterSortBy> thenByHeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'height', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Video, Video, QAfterSortBy> thenByHeightDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'height', Sort.desc);
+    });
+  }
+
   QueryBuilder<Video, Video, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -643,9 +821,27 @@ extension VideoQuerySortThenBy on QueryBuilder<Video, Video, QSortThenBy> {
       return query.addSortBy(r'views', Sort.desc);
     });
   }
+
+  QueryBuilder<Video, Video, QAfterSortBy> thenByWidth() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'width', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Video, Video, QAfterSortBy> thenByWidthDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'width', Sort.desc);
+    });
+  }
 }
 
 extension VideoQueryWhereDistinct on QueryBuilder<Video, Video, QDistinct> {
+  QueryBuilder<Video, Video, QDistinct> distinctByHeight() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'height');
+    });
+  }
+
   QueryBuilder<Video, Video, QDistinct> distinctByPath(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -666,12 +862,24 @@ extension VideoQueryWhereDistinct on QueryBuilder<Video, Video, QDistinct> {
       return query.addDistinctBy(r'views');
     });
   }
+
+  QueryBuilder<Video, Video, QDistinct> distinctByWidth() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'width');
+    });
+  }
 }
 
 extension VideoQueryProperty on QueryBuilder<Video, Video, QQueryProperty> {
   QueryBuilder<Video, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<Video, double, QQueryOperations> heightProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'height');
     });
   }
 
@@ -690,6 +898,12 @@ extension VideoQueryProperty on QueryBuilder<Video, Video, QQueryProperty> {
   QueryBuilder<Video, int, QQueryOperations> viewsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'views');
+    });
+  }
+
+  QueryBuilder<Video, double, QQueryOperations> widthProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'width');
     });
   }
 }

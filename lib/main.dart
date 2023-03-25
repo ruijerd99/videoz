@@ -4,11 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:videoz/screen/nav_screen/nav_screen.dart';
 
 import 'data/injector.dart';
+import 'data/model/video/video.dart';
+import 'data/repository/video/video_repository.dart';
+
+List<Video> videos = [];
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Injector.setup();
+  videos = await getIt<VideoRepository>().getAllVideos();
+  videos.shuffle();
 
   runApp(const MainApp());
 }

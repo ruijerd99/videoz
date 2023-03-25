@@ -1,20 +1,24 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
 import 'package:videoz/screen/video_feed/widgets/video_player_item.dart';
 
+import '../../data/injector.dart';
 import '../../data/model/video/video.dart';
+import '../../data/repository/video/video_repository.dart';
+import '../../widgets/faster_page_view_scroll_physics.dart';
 
 class VideoFeed extends StatefulWidget {
   const VideoFeed({
     super.key,
     required this.videos,
-    required this.initialIndex,
+    this.initialIndex = 0,
+    this.useHero = true,
+    this.onRefresh,
   });
 
   final List<Video> videos;
   final int initialIndex;
+  final bool useHero;
+  final Function(VoidCallback onInvoke)? onRefresh;
 
   @override
   State<VideoFeed> createState() => _VideoFeedState();
@@ -23,55 +27,36 @@ class VideoFeed extends StatefulWidget {
 class _VideoFeedState extends State<VideoFeed> {
   late final PageController _pageController;
 
-  final Map<int, VideoPlayerController> _controllers = {};
+  List<Video> _videos = [];
 
-  var _currentIndex = 0;
-  var _previousIndex = 0;
+  var _useHero = true;
 
   @override
   void initState() {
     super.initState();
-    _currentIndex = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
 
-    _pageController = PageController(initialPage: _currentIndex);
+    _useHero = widget.useHero;
 
-    _pageController.addListener(() {
-      if (_currentIndex - 1 < _pageController.page! &&
-          _currentIndex + 1 > _pageController.page!) {
-        return;
-      }
+    _videos = widget.videos;
 
-      _previousIndex = _currentIndex;
-      _currentIndex = _pageController.page!.round();
+    widget.onRefresh?.call(() async {
+      _videos = await getIt<VideoRepository>().getAllVideos();
+      setState(() {
+        _videos.shuffle();
 
-      print("=== reset video ${widget.videos[_previousIndex].id}");
-      _controllers[widget.videos[_previousIndex].id]?.pause();
-      _controllers[widget.videos[_previousIndex].id]?.seekTo(Duration.zero);
-
-      print("=== play video ${widget.videos[_currentIndex].id}");
-      _controllers[widget.videos[_currentIndex].id]?.play();
-
-      // dispose all controllers except n, n-1, n+1
-      if (_currentIndex - 2 >= 0) {
-        _controllers[widget.videos[_currentIndex - 2].id]?.dispose();
-        _controllers.remove(widget.videos[_currentIndex - 2].id);
-        print("=== dispose video ${widget.videos[_currentIndex - 2].id}");
-      }
-
-      if (_currentIndex + 2 < widget.videos.length) {
-        _controllers[widget.videos[_currentIndex + 2].id]?.dispose();
-        _controllers.remove(widget.videos[_currentIndex + 2].id);
-        print("=== dispose video ${widget.videos[_currentIndex + 2].id}");
-      }
+        _pageController.animateTo(
+          0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      });
     });
   }
 
   @override
   void dispose() {
     _pageController.dispose();
-    _controllers.forEach((key, value) {
-      value.dispose();
-    });
     super.dispose();
   }
 
@@ -79,44 +64,21 @@ class _VideoFeedState extends State<VideoFeed> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: PageView.builder(
+        key: UniqueKey(),
         controller: _pageController,
-        itemCount: widget.videos.length,
+        itemCount: _videos.length,
         scrollDirection: Axis.vertical,
-        physics: const CustomPageViewScrollPhysics(),
+        physics: const FasterPageViewScrollPhysics(),
         itemBuilder: (context, index) {
-          final video = widget.videos[index];
-          // check if controller is not created yet
-          final controller = _controllers.putIfAbsent(video.id, () {
-            return VideoPlayerController.file(File(video.getPath));
-          });
-
-          if (_currentIndex == index) {
-            controller.play();
-          }
-
+          final video = _videos[index];
+      
           return VideoPlayerItem(
             video: video,
-            controller: controller,
+            index: index,
+            useHero: _useHero,
           );
         },
       ),
     );
   }
-}
-
-class CustomPageViewScrollPhysics extends ScrollPhysics {
-  const CustomPageViewScrollPhysics({ScrollPhysics? parent})
-      : super(parent: parent);
-
-  @override
-  CustomPageViewScrollPhysics applyTo(ScrollPhysics? ancestor) {
-    return CustomPageViewScrollPhysics(parent: buildParent(ancestor)!);
-  }
-
-  @override
-  SpringDescription get spring => const SpringDescription(
-        mass: 80,
-        stiffness: 100,
-        damping: 0.8,
-      );
 }

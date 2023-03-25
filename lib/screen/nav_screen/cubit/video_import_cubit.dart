@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
@@ -49,8 +48,12 @@ class VideoImportCubit extends Cubit<VideoImportState> {
       }
 
       final fileExtension = FileHelper.getFileExtension(videoFile);
-      final fileName =
-          FileHelper.getFileName(file: videoFile, fileExtension: fileExtension);
+
+      final fileName = FileHelper.getFileName(
+        file: videoFile,
+        fileExtension: fileExtension,
+      );
+      
       final newPath = '${dir.path}/$fileName.$fileExtension';
 
       final file = File(newPath);
@@ -67,7 +70,6 @@ class VideoImportCubit extends Cubit<VideoImportState> {
         final thumbnailData = await VideoThumbnail.thumbnailData(
           video: newPath,
           imageFormat: ImageFormat.PNG,
-          quality: 100,
         );
 
         if (thumbnailData == null) {
@@ -83,6 +85,8 @@ class VideoImportCubit extends Cubit<VideoImportState> {
         final video = Video(
           path: newVideoFile.path.substring(dir.path.length + 1),
           thumbnailPath: thumbnail.path.substring(dir.path.length + 1),
+          width: asset.size.width,
+          height: asset.size.height,
         );
 
         getIt<VideoRepository>().saveVideo(video);
@@ -125,12 +129,14 @@ class VideoImportCubit extends Cubit<VideoImportState> {
 
     if (errorCount > 0) {
       BotToast.showText(
-        text: 'Imported $successCount videos, failed to import $errorCount videos.',
+        text:
+            'Imported $successCount videos, failed to import $errorCount videos.',
       );
 
       if (outOfMemory) {
         BotToast.showText(
-          text: 'Out of storage space, please free up some space and try again.',
+          text:
+              'Out of storage space, please free up some space and try again.',
         );
       }
     } else {

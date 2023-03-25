@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:videoz/main.dart';
+import 'package:videoz/screen/video_feed/video_feed.dart';
 
 import '../all_video/all_video_screen.dart';
-import 'cubit/video_import_cubit.dart';
 
 class NavScreen extends StatefulWidget {
   const NavScreen({super.key});
@@ -11,60 +13,75 @@ class NavScreen extends StatefulWidget {
 }
 
 class _NavScreenState extends State<NavScreen> {
-  final _screen = <Widget>[
-    const AllVideoScreen(),
-    const Center(
-      child: Text('Playlists'),
-    ),
-  ];
+  late final List<Widget> _screen;
 
   var _currentIndex = 0;
+  bool isRefresh = false;
 
-  final _videoImportCubit = VideoImportCubit();
+  Function onRefresh = () {};
+
+  @override
+  void initState() {
+    super.initState();
+    _screen = [
+      VideoFeed(
+        videos: videos,
+        useHero: false,
+        onRefresh: (onInvoke) {
+          onRefresh = onInvoke;
+        },
+      ),
+      const AllVideoScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        children: _screen
-            .asMap()
-            .map((i, screen) => MapEntry(
-                  i,
-                  Offstage(
-                    offstage: _currentIndex != i,
-                    child: screen,
-                  ),
-                ))
-            .values
-            .toList(),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screen,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          _videoImportCubit.addVideosButtonPressed(context);
-        },
-        child: const Icon(Icons.add),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.video_collection_outlined),
-            activeIcon: Icon(Icons.video_collection_rounded),
-            label: 'Videos',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Divider(
+            height: 0,
+            thickness: 1,
+            color: Colors.white10,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.tag_outlined),
-            activeIcon: Icon(Icons.tag_rounded),
-            label: 'Playlists',
+          SizedBox(
+            height: kBottomNavigationBarHeight + MediaQuery.of(context).padding.bottom,
+            child: BottomNavigationBar(
+              backgroundColor: Colors.black,
+              type: BottomNavigationBarType.fixed,
+              showSelectedLabels: false,
+              showUnselectedLabels: false,
+              items: const [
+                BottomNavigationBarItem(
+                  icon: FaIcon(FontAwesomeIcons.house),
+                  label: 'Videos',
+                ),
+                BottomNavigationBarItem(
+                  icon: FaIcon(FontAwesomeIcons.hashtag),
+                  label: 'Playlists',
+                ),
+              ],
+              currentIndex: _currentIndex,
+              onTap: (index) async {
+                if (_currentIndex == 0 && index == 0 && !isRefresh) {
+                  isRefresh = true;
+                  await onRefresh();
+                  isRefresh = false;
+                } else {
+                  setState(() {
+                    _currentIndex = index;
+                  });
+                }
+              },
+            ),
           ),
         ],
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
       ),
     );
   }

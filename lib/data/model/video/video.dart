@@ -9,6 +9,8 @@ class Video {
   final String thumbnailPath;
   final String path;
   final int views;
+  final double width;
+  final double height;
 
   @ignore
   get getThumbnailPath => "$documentDir/$thumbnailPath";
@@ -20,18 +22,8 @@ class Video {
   Video({
     required this.path,
     required this.thumbnailPath,
+    required this.width,
+    required this.height,
     this.views = 0,
   }) : id = Isar.autoIncrement;
-
-  Video copyWith({
-    String? thumbnailPath,
-    String? path,
-    int? views,
-  }) {
-    return Video(
-      thumbnailPath: thumbnailPath ?? this.thumbnailPath,
-      path: path ?? this.path,
-      views: views ?? this.views,
-    )..id = id;
-  }
 }

@@ -1,5 +1,7 @@
 PODS:
   - Flutter (1.0.0)
+  - flutter_native_splash (0.0.1):
+    - Flutter
   - isar_flutter_libs (1.0.0):
     - Flutter
   - libwebp (1.2.4):
@@ -25,6 +27,7 @@ PODS:
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
+  - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
   - isar_flutter_libs (from `.symlinks/plugins/isar_flutter_libs/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/ios`)
   - photo_manager (from `.symlinks/plugins/photo_manager/ios`)
@@ -38,6 +41,8 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
+  flutter_native_splash:
+    :path: ".symlinks/plugins/flutter_native_splash/ios"
   isar_flutter_libs:
     :path: ".symlinks/plugins/isar_flutter_libs/ios"
   path_provider_foundation:
@@ -51,6 +56,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
+  flutter_native_splash: 52501b97d1c0a5f898d687f1646226c1f93c56ef
   isar_flutter_libs: b69f437aeab9c521821c3f376198c4371fa21073
   libwebp: f62cb61d0a484ba548448a4bd52aabf150ff6eef
   path_provider_foundation: c68054786f1b4f3343858c1e1d0caaded73f0be9
