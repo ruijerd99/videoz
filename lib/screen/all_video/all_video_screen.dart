@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:videoz/screen/nav_screen/cubit/video_import_cubit.dart';
+import 'package:videoz/screen/setting_screen/setting_screen.dart';
 
 import '../video_feed/video_feed.dart';
 import 'bloc/video_bloc.dart';
@@ -65,14 +67,28 @@ class _AllVideoScreenState extends State<AllVideoScreen> {
                 final selectedVideos = state.selectedVideos;
                 if (selectedVideos.isNotEmpty) {
                   return IconButton(
-                    icon: const Icon(Icons.delete),
+                    icon: const FaIcon(FontAwesomeIcons.solidTrashCan),
                     onPressed: () {
                       _videoBloc.add(DeleteVideos(selectedVideos));
                     },
                   );
                 }
               }
-              return const SizedBox.shrink();
+              return IconButton(
+                icon: const FaIcon(FontAwesomeIcons.gear),
+                onPressed: () {
+                  // settings loops video or auto next
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return const AlertDialog(
+                        title: Text('Settings'),
+                        content: SettingView(),
+                      );
+                    },
+                  );
+                },
+              );
             },
           ),
         ],
@@ -88,7 +104,7 @@ class _AllVideoScreenState extends State<AllVideoScreen> {
             if (state is VideoLoaded) {
               if (state.selectionMode()) {
                 return IconButton(
-                  icon: const Icon(Icons.close),
+                  icon: const FaIcon(FontAwesomeIcons.xmark),
                   onPressed: () {
                     _videoBloc.add(ExitSelectionMode());
                   },

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:videoz/main.dart';
 import 'package:videoz/screen/video_feed/video_feed.dart';
 
+import '../../data/model/video/video.dart';
 import '../all_video/all_video_screen.dart';
 
 class NavScreen extends StatefulWidget {
-  const NavScreen({super.key});
+  const NavScreen({super.key, required this.videos});
+  final List<Video> videos;
 
   @override
   State<NavScreen> createState() => _NavScreenState();
@@ -25,7 +26,7 @@ class _NavScreenState extends State<NavScreen> {
     super.initState();
     _screen = [
       VideoFeed(
-        videos: videos,
+        videos: widget.videos,
         useHero: false,
         onRefresh: (onInvoke) {
           onRefresh = onInvoke;
@@ -51,7 +52,8 @@ class _NavScreenState extends State<NavScreen> {
             color: Colors.white10,
           ),
           SizedBox(
-            height: kBottomNavigationBarHeight + MediaQuery.of(context).padding.bottom,
+            height: kBottomNavigationBarHeight +
+                MediaQuery.of(context).padding.bottom,
             child: BottomNavigationBar(
               backgroundColor: Colors.black,
               type: BottomNavigationBarType.fixed,

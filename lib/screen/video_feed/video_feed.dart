@@ -29,6 +29,8 @@ class _VideoFeedState extends State<VideoFeed> {
 
   List<Video> _videos = [];
 
+  // queue controller to dispose
+
   var _useHero = true;
 
   @override
@@ -71,11 +73,22 @@ class _VideoFeedState extends State<VideoFeed> {
         physics: const FasterPageViewScrollPhysics(),
         itemBuilder: (context, index) {
           final video = _videos[index];
-      
+
           return VideoPlayerItem(
+            key: ValueKey(video.id),
             video: video,
             index: index,
             useHero: _useHero,
+            onVideoEnded: () {
+              if (index == _videos.length - 1) {
+                return;
+              }
+
+              _pageController.nextPage(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            },
           );
         },
       ),

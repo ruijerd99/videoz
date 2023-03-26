@@ -1,10 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:video_player/video_player.dart';
+import 'package:videoz/screen/video_feed/cubit/video_player_cubit.dart';
+import 'package:videoz/screen/video_feed/dispose_video_controller_service.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../../data/model/video/video.dart';
+import '../../../main.dart';
 import 'custom_video_progress_indicator.dart';
 
 class VideoPlayerItem extends StatefulWidget {
@@ -12,12 +17,14 @@ class VideoPlayerItem extends StatefulWidget {
 
   final int index;
   final bool useHero;
+  final VoidCallback onVideoEnded;
 
   const VideoPlayerItem({
     Key? key,
     required this.video,
     required this.index,
     this.useHero = true,
+    required this.onVideoEnded,
   }) : super(key: key);
 
   @override
@@ -29,17 +36,43 @@ class _VideoPlayerItemState extends State<VideoPlayerItem>
   late final AnimationController _iconAnimationController;
   late final Animation<double> _iconAnimation;
   late VideoPlayerController _controller;
+  final _videoPlayerCubit = VideoPlayerCubit();
 
-  _initController() async {
-    await _controller.initialize();
-    await _controller.setLooping(true);
+  var isVideoEnded = false;
+
+  void _onVideoEnded() {
+    var value = _controller.value;
+    if (!value.isInitialized) return;
+
+    if (value.isLooping) return;
+
+    if (value.position == value.duration && !isVideoEnded) {
+      isVideoEnded = true;
+      widget.onVideoEnded();
+    }
+  }
+
+  void updateVideoConfig() {
+    _controller.setLooping(isLoop.value);
   }
 
   @override
   void initState() {
     super.initState();
-    VisibilityDetectorController.instance.updateInterval = const Duration(milliseconds: 100);
+
+    VisibilityDetectorController.instance.updateInterval = const Duration(
+      milliseconds: 10,
+    );
+
     _controller = VideoPlayerController.file(File(widget.video.getPath));
+
+    updateVideoConfig();
+
+    _videoPlayerCubit
+        .initialize(_controller)
+        .then((_) => _controller.addListener(_onVideoEnded));
+
+    isLoop.addListener(updateVideoConfig);
 
     _iconAnimationController = AnimationController(
       vsync: this,
@@ -53,8 +86,12 @@ class _VideoPlayerItemState extends State<VideoPlayerItem>
 
   @override
   void dispose() {
+    _controller.pause();
     _iconAnimationController.dispose();
-    _controller.dispose();
+    _controller.removeListener(_onVideoEnded);
+    isLoop.removeListener(updateVideoConfig);
+    DisposeVideoControllerService().addController(_controller);
+    // _controller.dispose();
     super.dispose();
   }
 
@@ -88,23 +125,53 @@ class _VideoPlayerItemState extends State<VideoPlayerItem>
         ? kBottomNavigationBarHeight + MediaQuery.of(context).padding.bottom
         : 0.0;
 
-    final fit = selectBoxFit(
+    var fit = selectBoxFit(
       videoWidth: widget.video.width,
       videoHeight: widget.video.height,
       deviceWidth: MediaQuery.of(context).size.width,
       deviceHeight: MediaQuery.of(context).size.height - bottomPadding,
     );
 
+    if (widget.useHero) {
+      fit = BoxFit.contain;
+    }
+
+    final thumbnail = Image.file(
+      File(widget.video.getThumbnailPath),
+      frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
+        return frame == null
+            ? Shimmer.fromColors(
+                direction: ShimmerDirection.ltr,
+                baseColor: Colors.white24,
+                highlightColor: Colors.white30,
+                child: Container(
+                  color: Colors.white24,
+                ),
+              )
+            : child;
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return Shimmer.fromColors(
+          direction: ShimmerDirection.ltr,
+          baseColor: Colors.white24,
+          highlightColor: Colors.white30,
+          child: Container(
+            color: Colors.white24,
+          ),
+        );
+      },
+    );
+
     return VisibilityDetector(
-      key: Key(widget.video.id.toString()),
+      key: ValueKey(widget.video.id),
       onVisibilityChanged: (VisibilityInfo info) {
+        if (mounted == false) return;
+
         if (info.visibleFraction == 0 && _controller.value.isPlaying == true) {
           print('=== pause ${widget.video.id} ${widget.index}');
 
-          if (mounted) {
-            _controller.pause();
-            _iconAnimationController.forward();
-          }
+          _controller.pause();
+          _iconAnimationController.forward();
         } else if (info.visibleFraction == 1 &&
             _controller.value.isPlaying == false) {
           print('=== play ${widget.video.id} ${widget.index}');
@@ -127,6 +194,7 @@ class _VideoPlayerItemState extends State<VideoPlayerItem>
           // print("=== ${details.primaryVelocity}");
           if (details.primaryVelocity! > 300 && widget.useHero) {
             print("=== pop ${widget.index}");
+            _controller.pause();
             Navigator.of(context).pop(widget.index);
           }
         },
@@ -142,35 +210,31 @@ class _VideoPlayerItemState extends State<VideoPlayerItem>
                     child: widget.useHero
                         ? Hero(
                             tag: widget.video.id,
-                            child: Image.file(
-                              File(widget.video.getThumbnailPath),
-                            ),
+                            child: thumbnail,
                           )
-                        : Image.file(
-                            File(widget.video.getThumbnailPath),
-                          ),
+                        : thumbnail,
                   ),
                 ),
               ),
-              FutureBuilder(
-                future: _initController(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SizedBox.shrink();
-                  }
-
-                  return SizedBox.expand(
-                    child: ClipRect(
-                      child: FittedBox(
-                        fit: fit,
-                        child: SizedBox(
-                          width: _controller.value.size.width,
-                          height: _controller.value.size.height,
-                          child: VideoPlayer(_controller),
+              BlocBuilder<VideoPlayerCubit, VideoPlayerState>(
+                bloc: _videoPlayerCubit,
+                builder: (context, state) {
+                  if (state is VideoPlayerInitilized) {
+                    return SizedBox.expand(
+                      child: ClipRect(
+                        child: FittedBox(
+                          fit: fit,
+                          child: SizedBox(
+                            width: _controller.value.size.width,
+                            height: _controller.value.size.height,
+                            child: VideoPlayer(_controller),
+                          ),
                         ),
                       ),
-                    ),
-                  );
+                    );
+                  }
+
+                  return const SizedBox.shrink();
                 },
               ),
               FadeTransition(

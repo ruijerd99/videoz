@@ -1,8 +1,9 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-showLoading() {
+void showLoading() {
   BotToast.showCustomLoading(
     clickClose: true,
     toastBuilder: (cancelFunc) {
@@ -22,6 +23,12 @@ showLoading() {
   );
 }
 
-hideLoading() {
+void hideLoading() {
   BotToast.closeAllLoading();
+}
+
+
+Future<bool> isLooping() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('setting') == 0;
 }
